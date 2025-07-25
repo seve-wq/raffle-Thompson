@@ -1,0 +1,29 @@
+# Environment Variables Template for Raffle Ticket System
+# Copy this to .env and fill in your actual values
+
+# Supabase Configuration
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+# Stripe Configuration
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+
+# Email Configuration (Gmail)
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password-here
+
+# Admin Authentication
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=your_secure_admin_password
+
+# EmailJS Configuration (Optional - for frontend email)
+EMAILJS_PUBLIC_KEY=your_emailjs_public_key
+EMAILJS_SERVICE_ID=your_emailjs_service_id
+EMAILJS_TEMPLATE_ID=your_emailjs_template_id
+
+# PayPal Configuration (Optional)
+PAYPAL_CLIENT_ID=your_paypal_client_id
+
+# Server Configuration
+PORT=3000 

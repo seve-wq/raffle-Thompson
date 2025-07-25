@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Thompson's Roofing</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            color: #333;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #ff6b35;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .refresh-btn, .export-btn {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover, .export-btn:hover {
+            background: #e55a2b;
+            transform: translateY(-2px);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #ff6b35;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #ff6b35;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .tickets-table {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h2 {
+            color: #333;
+            margin: 0;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr:hover {
+            background: #fff5f0;
+        }
+
+        .ticket-numbers {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #ff6b35;
+            background: #fff5f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            max-width: 200px;
+            word-break: break-all;
+        }
+
+        .status-paid {
+            background: #d4edda;
+            color: #155724;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .email-cell {
+            max-width: 200px;
+            word-break: break-all;
+        }
+
+        .amount-cell {
+            font-weight: 600;
+            color: #ff6b35;
+        }
+
+        .date-cell {
+            white-space: nowrap;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .no-data h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                min-width: auto;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+                font-size: 14px;
+            }
+            
+            .ticket-numbers {
+                font-size: 10px;
+                max-width: 150px;
+            }
+            
+            .table-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Thompson's Roofing</h1>
+            <p>Raffle Ticket Admin Dashboard</p>
+        </div>
+
+        <div class="controls">
+            <button class="refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
+            <button class="export-btn" onclick="exportData()">📊 Export to CSV</button>
+            <button class="refresh-btn" onclick="logout()" style="background: #dc3545;">🚪 Logout</button>
+            <input type="text" class="search-box" id="searchBox" placeholder="Search by email or name..." onkeyup="filterTable()">
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalSales">-</div>
+                <div class="stat-label">Total Sales</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalRevenue">-</div>
+                <div class="stat-label">Total Revenue</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalTickets">-</div>
+                <div class="stat-label">Tickets Sold</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgOrder">-</div>
+                <div class="stat-label">Avg Order Value</div>
+            </div>
+        </div>
+
+        <div class="tickets-table">
+            <div class="table-header">
+                <h2>📋 All Raffle Ticket Sales</h2>
+                <div id="tableCount">Loading...</div>
+            </div>
+            <div class="table-container">
+                <table id="ticketsTable">
+                    <thead>
+                        <tr>
+                            <th>📅 Date</th>
+                            <th>👤 Customer</th>
+                            <th>📧 Email</th>
+                            <th>🎫 Tickets</th>
+                            <th>💰 Amount</th>
+                            <th>🔢 Ticket Numbers</th>
+                            <th>✅ Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticketsTableBody">
+                        <tr>
+                            <td colspan="7" class="loading">Loading tickets...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase and load credentials from server
+        let supabase;
+        
+        async function initializeAdmin() {
+            try {
+                console.log('🔐 Admin: Loading credentials from server...');
+                
+                // First, ensure Supabase client is loaded
+                if (typeof window.supabase === 'undefined') {
+                    console.log('📦 Admin: Loading Supabase client...');
+                    await loadSupabaseClient();
+                }
+                
+                // Fetch credentials from server (which loads from .env)
+                const response = await fetch('/api/config');
+                if (!response.ok) {
+                    throw new Error('Failed to load configuration from server');
+                }
+                
+                const appConfig = await response.json();
+                console.log('✅ Admin: Credentials loaded from server');
+
+                // Create Supabase client with credentials from server
+                supabase = window.supabase.createClient(
+                    appConfig.SUPABASE_URL,
+                    appConfig.SUPABASE_ANON_KEY
+                );
+                
+                console.log('✅ Admin: Supabase client initialized with server credentials');
+                
+                // Load data after initialization
+                loadData();
+                
+            } catch (error) {
+                console.error('❌ Error initializing admin:', error);
+                document.body.innerHTML = `
+                    <div style="text-align: center; padding: 50px; color: red;">
+                        <h2>❌ Configuration Error</h2>
+                        <p>Failed to load configuration: ${error.message}</p>
+                        <p>Please check your server setup and refresh the page.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function loadSupabaseClient() {
+            return new Promise((resolve, reject) => {
+                // Check if already loaded
+                if (typeof window.supabase !== 'undefined') {
+                    resolve();
+                    return;
+                }
+                
+                // Load Supabase client from CDN
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/@supabase/supabase-js@2';
+                script.onload = function() {
+                    console.log('✅ Admin: Supabase client loaded successfully');
+                    resolve();
+                };
+                script.onerror = function() {
+                    console.error('❌ Admin: Failed to load Supabase client');
+                    reject(new Error('Failed to load Supabase client'));
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        let allTickets = [];
+
+        async function loadData() {
+            try {
+                document.getElementById('ticketsTableBody').innerHTML = '<tr><td colspan="7" class="loading">Loading tickets...</td></tr>';
+                
+                // Load tickets from Supabase
+                const { data: tickets, error } = await supabase
+                    .from('raffle_tickets')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allTickets = tickets || [];
+                updateStats();
+                updateTable();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('ticketsTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="error">❌ Error loading data. Please check your connection and try again.</td></tr>';
+            }
+        }
+
+        function updateStats() {
+            const totalSales = allTickets.length;
+            const totalRevenue = allTickets.reduce((sum, ticket) => sum + parseFloat(ticket.amount || 0), 0);
+            const totalTickets = allTickets.reduce((sum, ticket) => sum + (ticket.total_tickets || 0), 0);
+            const avgOrder = totalSales > 0 ? (totalRevenue / totalSales).toFixed(2) : 0;
+
+            document.getElementById('totalSales').textContent = totalSales;
+            document.getElementById('totalRevenue').textContent = `$${totalRevenue.toFixed(2)}`;
+            document.getElementById('totalTickets').textContent = totalTickets;
+            document.getElementById('avgOrder').textContent = `$${avgOrder}`;
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('ticketsTableBody');
+            const tableCount = document.getElementById('tableCount');
+            
+            if (allTickets.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="no-data">
+                            <h3>📭 No tickets found</h3>
+                            <p>No raffle tickets have been sold yet.</p>
+                        </td>
+                    </tr>
+                `;
+                tableCount.textContent = '0 tickets';
+                return;
+            }
+
+            tableCount.textContent = `${allTickets.length} tickets`;
+
+            tbody.innerHTML = allTickets.map(ticket => `
+                <tr>
+                    <td class="date-cell">${formatDate(ticket.created_at)}</td>
+                    <td>${ticket.customer_name || 'N/A'}</td>
+                    <td class="email-cell">${ticket.customer_email || 'N/A'}</td>
+                    <td><strong>${ticket.total_tickets || 0}</strong></td>
+                    <td class="amount-cell">$${parseFloat(ticket.amount || 0).toFixed(2)}</td>
+                    <td class="ticket-numbers">${formatTicketNumbers(ticket.ticket_numbers)}</td>
+                    <td><span class="status-paid">${ticket.status || 'paid'}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatTicketNumbers(numbers) {
+            if (!numbers) return 'N/A';
+            
+            // Handle array format
+            if (Array.isArray(numbers)) {
+                return numbers.join(', ');
+            }
+            
+            // Handle string format (comma-separated)
+            if (typeof numbers === 'string') {
+                return numbers;
+            }
+            
+            // Handle JSON string format
+            try {
+                const parsed = JSON.parse(numbers);
+                if (Array.isArray(parsed)) {
+                    return parsed.join(', ');
+                }
+            } catch (e) {
+                // Ignore JSON parse errors
+            }
+            
+            return 'N/A';
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const filteredTickets = allTickets.filter(ticket => 
+                (ticket.customer_email && ticket.customer_email.toLowerCase().includes(searchTerm)) ||
+                (ticket.customer_name && ticket.customer_name.toLowerCase().includes(searchTerm))
+            );
+
+            const tbody = document.getElementById('ticketsTableBody');
+            const tableCount = document.getElementById('tableCount');
+            
+            if (filteredTickets.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="no-data">
+                            <h3>🔍 No matches found</h3>
+                            <p>No tickets match your search criteria.</p>
+                        </td>
+                    </tr>
+                `;
+                tableCount.textContent = '0 tickets';
+                return;
+            }
+
+            tableCount.textContent = `${filteredTickets.length} of ${allTickets.length} tickets`;
+
+            tbody.innerHTML = filteredTickets.map(ticket => `
+                <tr>
+                    <td class="date-cell">${formatDate(ticket.created_at)}</td>
+                    <td>${ticket.customer_name || 'N/A'}</td>
+                    <td class="email-cell">${ticket.customer_email || 'N/A'}</td>
+                    <td><strong>${ticket.total_tickets || 0}</strong></td>
+                    <td class="amount-cell">$${parseFloat(ticket.amount || 0).toFixed(2)}</td>
+                    <td class="ticket-numbers">${formatTicketNumbers(ticket.ticket_numbers)}</td>
+                    <td><span class="status-paid">${ticket.status || 'paid'}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function exportData() {
+            if (allTickets.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+
+            const headers = ['Date', 'Customer Name', 'Email', 'Tickets', 'Amount', 'Ticket Numbers', 'Status'];
+            const csvContent = [
+                headers.join(','),
+                ...allTickets.map(ticket => [
+                    formatDate(ticket.created_at),
+                    `"${ticket.customer_name || 'N/A'}"`,
+                    `"${ticket.customer_email || 'N/A'}"`,
+                    ticket.total_tickets || 0,
+                    parseFloat(ticket.amount || 0).toFixed(2),
+                    `"${formatTicketNumbers(ticket.ticket_numbers)}"`,
+                    ticket.status || 'paid'
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `raffle-tickets-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Check authentication first, then initialize
+        checkAuthAndInitialize();
+        
+        function checkAuthAndInitialize() {
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                // Not logged in, redirect to login
+                window.location.href = '/admin';
+                return;
+            }
+            
+            // Verify token
+            fetch('/api/admin/verify', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.valid) {
+                    // Token is valid, initialize admin
+                    initializeAdmin();
+                } else {
+                    // Invalid token, redirect to login
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('adminUser');
+                    window.location.href = '/admin';
+                }
+            })
+            .catch(() => {
+                // Error verifying token, redirect to login
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                window.location.href = '/admin';
+            });
+        }
+        
+        function logout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            window.location.href = '/admin';
+        }
+    </script>
+</body>
+</html> 

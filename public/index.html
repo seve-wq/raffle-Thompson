@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thompson's Roofing - Raffle Tickets</title>
+    <!-- PayPal SDK will be loaded dynamically with secure credentials -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff8c42, #ff6b35);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .ticket-options {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .ticket-option {
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .ticket-option:hover {
+            border-color: #ff6b35;
+            transform: translateY(-2px);
+        }
+
+        .ticket-option.selected {
+            border-color: #ff6b35;
+            background: #fff5f0;
+        }
+
+        .ticket-option h3 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .ticket-option .price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff6b35;
+        }
+
+        .ticket-option .description {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .quantity-selector {
+            margin: 20px 0;
+        }
+
+        .quantity-selector label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .quantity-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #ff6b35;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.3s ease;
+        }
+
+        .quantity-btn:hover {
+            background: #e55a2b;
+        }
+
+        .quantity-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .quantity-display {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .total {
+            background: #fff5f0;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .total h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .total-amount {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ff6b35;
+        }
+
+        .paypal-container {
+            margin-top: 20px;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff6b35;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            display: none;
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .error-message {
+            display: none;
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .back-link {
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #ff6b35;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Email status styles */
+        .email-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-width: 300px;
+            display: none;
+        }
+
+        .email-status.success {
+            border-left: 5px solid #28a745;
+        }
+
+        .email-status.error {
+            border-left: 5px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">TR</div>
+        <h1>Thompson's Roofing</h1>
+        <p class="subtitle">Enter our exciting raffle for a chance to win!</p>
+
+
+
+        <div class="ticket-options">
+            <div class="ticket-option" data-price="10" data-tickets="1">
+                <h3>1 Ticket</h3>
+                <div class="price">$10</div>
+                <div class="description">One chance to win</div>
+            </div>
+            <div class="ticket-option" data-price="25" data-tickets="3">
+                <h3>3 Tickets</h3>
+                <div class="price">$25</div>
+                <div class="description">Save $5 - Best value!</div>
+            </div>
+            <div class="ticket-option" data-price="45" data-tickets="5">
+                <h3>5 Tickets</h3>
+                <div class="price">$45</div>
+                <div class="description">Save $5 - Great deal!</div>
+            </div>
+        </div>
+
+        <div class="quantity-selector">
+            <label>Quantity:</label>
+            <div class="quantity-controls">
+                <button class="quantity-btn" onclick="changeQuantity(-1)">-</button>
+                <div class="quantity-display" id="quantity">1</div>
+                <button class="quantity-btn" onclick="changeQuantity(1)">+</button>
+            </div>
+        </div>
+
+        <!-- Customer Email Input -->
+        <div class="email-input-section" style="background: #fff5f0; padding: 20px; border-radius: 12px; margin: 20px 0; border: 2px solid #ff6b35;">
+            <h3 style="color: #333; margin-bottom: 15px;">📧 Where should we send your raffle tickets?</h3>
+            <div style="text-align: left;">
+                <label for="customerEmail" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Email Address:</label>
+                <input type="email" id="customerEmail" placeholder="Enter your email address" required 
+                       style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box;"
+                       onchange="validateEmail()" onblur="validateEmail()">
+                <div id="emailValidation" style="margin-top: 5px; font-size: 14px; display: none;"></div>
+                <p style="margin-top: 8px; color: #666; font-size: 14px;">We'll send your raffle ticket numbers to this email address.</p>
+            </div>
+        </div>
+
+        <div class="total">
+            <h3>Total</h3>
+            <div class="total-amount" id="total">$10</div>
+        </div>
+
+        <div class="paypal-container" id="paypal-container">
+            <!-- PayPal buttons will be rendered here -->
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing your payment...</p>
+        </div>
+
+        <div class="success-message" id="successMessage">
+            Payment successful! Check your email for your raffle ticket numbers.
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            Payment failed. Please try again.
+        </div>
+
+        <div class="back-link">
+            <a href="https://rafflearoof.com">← Back to Main Website</a>
+        </div>
+    </div>
+
+    <!-- Email Status Popup -->
+    <div id="emailStatus" class="email-status">
+        <h4 id="emailStatusTitle">Email Status</h4>
+        <p id="emailStatusMessage">Processing...</p>
+        <button onclick="closeEmailStatus()" style="background: #ff6b35; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; margin-top: 10px;">Close</button>
+    </div>
+
+    <script>
+        let selectedOption = null;
+        let quantity = 1;
+        let paypalButtons = null;
+
+        // Select first option by default
+        document.querySelector('.ticket-option').classList.add('selected');
+        selectedOption = document.querySelector('.ticket-option');
+
+        // Ticket option selection
+        document.querySelectorAll('.ticket-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.ticket-option').forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedOption = option;
+                updateTotal();
+                renderPayPalButtons();
+            });
+        });
+
+        function changeQuantity(delta) {
+            const newQuantity = quantity + delta;
+            if (newQuantity >= 1 && newQuantity <= 10) {
+                quantity = newQuantity;
+                document.getElementById('quantity').textContent = quantity;
+                updateTotal();
+                renderPayPalButtons();
+            }
+        }
+
+        function updateTotal() {
+            if (selectedOption) {
+                const basePrice = parseInt(selectedOption.dataset.price);
+                const total = basePrice * quantity;
+                document.getElementById('total').textContent = `$${total}`;
+            }
+        }
+
+        function generateTicketNumbers(count) {
+            const tickets = [];
+            for (let i = 0; i < count; i++) {
+                const ticketNumber = Math.floor(10000 + Math.random() * 90000).toString();
+                tickets.push(ticketNumber);
+            }
+            return tickets;
+        }
+
+        function showEmailStatus(title, message, isSuccess = true) {
+            const statusDiv = document.getElementById('emailStatus');
+            const titleEl = document.getElementById('emailStatusTitle');
+            const messageEl = document.getElementById('emailStatusMessage');
+            
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            
+            statusDiv.className = `email-status ${isSuccess ? 'success' : 'error'}`;
+            statusDiv.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function closeEmailStatus() {
+            document.getElementById('emailStatus').style.display = 'none';
+        }
+
+        function validateEmail() {
+            const emailInput = document.getElementById('customerEmail');
+            const validationDiv = document.getElementById('emailValidation');
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                validationDiv.style.display = 'none';
+                emailInput.style.borderColor = '#ddd';
+                renderPayPalButtons(); // Re-render to update button state
+                return false;
+            }
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailRegex.test(email)) {
+                validationDiv.textContent = '✅ Valid email address';
+                validationDiv.style.color = '#28a745';
+                validationDiv.style.display = 'block';
+                emailInput.style.borderColor = '#28a745';
+                renderPayPalButtons(); // Re-render to enable button
+                return true;
+            } else {
+                validationDiv.textContent = '❌ Please enter a valid email address';
+                validationDiv.style.color = '#dc3545';
+                validationDiv.style.display = 'block';
+                emailInput.style.borderColor = '#dc3545';
+                renderPayPalButtons(); // Re-render to disable button
+                return false;
+            }
+        }
+
+        // SIMPLE EMAIL FUNCTION - NO COMPLEX ASYNC
+        async function sendEmailSimple(ticketData) {
+            console.log('📧 SIMPLE EMAIL: Starting...', ticketData);
+            
+            // Show status immediately
+            showEmailStatus('📧 Sending Email', 'Initializing email service...', true);
+            
+            try {
+                // Check if config is loaded
+                if (!appConfig.EMAILJS_PUBLIC_KEY) {
+                    throw new Error('EmailJS configuration not loaded. Please refresh the page.');
+                }
+
+                // Initialize EmailJS with credentials from config
+                emailjs.init(appConfig.EMAILJS_PUBLIC_KEY);
+                
+                // Prepare email data
+                const emailData = {
+                    to_email: ticketData.customerEmail,
+                    to_name: ticketData.customerName || 'Valued Customer',
+                    order_id: ticketData.orderId,
+                    ticket_numbers: ticketData.ticketNumbers.join(', '),
+                    total_amount: `$${ticketData.amount}`,
+                    purchase_date: new Date().toLocaleDateString(),
+                    email: ticketData.customerEmail,
+                    name: ticketData.customerName || 'Valued Customer',
+                    tickets: ticketData.ticketNumbers.join(', '),
+                    amount: ticketData.amount,
+                    order: ticketData.orderId,
+                    message: `Thank you for your purchase of raffle tickets!
+
+Order Details:
+- Order ID: ${ticketData.orderId}
+- Amount: $${ticketData.amount}
+- Total Tickets: ${ticketData.totalTickets}
+
+Your Raffle Ticket Numbers:
+${ticketData.ticketNumbers.map(num => `Ticket #${num}`).join('\n')}
+
+Please save these ticket numbers. You'll need them to claim your prize if you win!
+
+Good luck!
+Thompson's Roofing`
+                };
+                
+                console.log('📧 SIMPLE EMAIL: Sending with data:', emailData);
+                showEmailStatus('📧 Sending Email', 'Sending email to ' + ticketData.customerEmail, true);
+                
+                // Send email with credentials from config
+                emailjs.send(appConfig.EMAILJS_SERVICE_ID, appConfig.EMAILJS_TEMPLATE_ID, emailData)
+                    .then(function(response) {
+                        console.log('✅ SIMPLE EMAIL: Success!', response);
+                        showEmailStatus('✅ Email Sent!', 'Email sent successfully to ' + ticketData.customerEmail, true);
+                        
+                        // Store success in localStorage
+                        localStorage.setItem('lastEmailSuccess', JSON.stringify({
+                            email: ticketData.customerEmail,
+                            timestamp: new Date().toISOString(),
+                            orderId: ticketData.orderId
+                        }));
+                    })
+                    .catch(function(error) {
+                        console.error('❌ SIMPLE EMAIL: Failed!', error);
+                        showEmailStatus('❌ Email Failed', 'Error: ' + error.text, false);
+                        
+                        // Fallback: Open manual email
+                        const emailMessage = `Thank you for your purchase of raffle tickets!
+
+Order Details:
+- Order ID: ${ticketData.orderId}
+- Amount: $${ticketData.amount}
+- Total Tickets: ${ticketData.totalTickets}
+
+Your Raffle Ticket Numbers:
+${ticketData.ticketNumbers.map(num => `Ticket #${num}`).join('\n')}
+
+Please save these ticket numbers. You'll need them to claim your prize if you win!
+
+Good luck!
+Thompson's Roofing`;
+
+                        const emailUrl = `mailto:${ticketData.customerEmail}?subject=Your Thompson's Roofing Raffle Tickets&body=${encodeURIComponent(emailMessage)}`;
+                        window.open(emailUrl);
+                        
+                        showEmailStatus('📧 Manual Email', 'Opened manual email client as fallback', false);
+                    });
+                    
+            } catch (error) {
+                console.error('💥 SIMPLE EMAIL: Critical error!', error);
+                showEmailStatus('💥 Critical Error', 'EmailJS not available', false);
+                
+                // Fallback: Open manual email
+                const emailMessage = `Thank you for your purchase of raffle tickets!
+
+Order Details:
+- Order ID: ${ticketData.orderId}
+- Amount: $${ticketData.amount}
+- Total Tickets: ${ticketData.totalTickets}
+
+Your Raffle Ticket Numbers:
+${ticketData.ticketNumbers.map(num => `Ticket #${num}`).join('\n')}
+
+Please save these ticket numbers. You'll need them to claim your prize if you win!
+
+Good luck!
+Thompson's Roofing`;
+
+                const emailUrl = `mailto:${ticketData.customerEmail}?subject=Your Thompson's Roofing Raffle Tickets&body=${encodeURIComponent(emailMessage)}`;
+                window.open(emailUrl);
+                
+                showEmailStatus('📧 Manual Email', 'Opened manual email client due to error', false);
+            }
+        }
+
+        function renderPayPalButtons() {
+            const container = document.getElementById('paypal-container');
+            container.innerHTML = '';
+
+            if (!selectedOption) return;
+
+            const basePrice = parseInt(selectedOption.dataset.price);
+            const ticketsPerUnit = parseInt(selectedOption.dataset.tickets);
+            const totalTickets = ticketsPerUnit * quantity;
+            const totalAmount = basePrice * quantity;
+
+            // Check if email is valid
+            const customerEmail = document.getElementById('customerEmail').value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const isEmailValid = emailRegex.test(customerEmail);
+
+            paypal.Buttons({
+                createOrder: function(data, actions) {
+                    // Check email again before creating order
+                    const currentEmail = document.getElementById('customerEmail').value.trim();
+                    if (!currentEmail || !emailRegex.test(currentEmail)) {
+                        alert('Please enter a valid email address before proceeding with payment.');
+                        return false;
+                    }
+                    
+                    return actions.order.create({
+                        purchase_units: [{
+                            amount: {
+                                value: totalAmount.toString()
+                            },
+                            description: `Thompson's Roofing Raffle - ${totalTickets} ticket${totalTickets > 1 ? 's' : ''}`,
+                            custom_id: JSON.stringify({
+                                quantity: quantity,
+                                ticketsPerUnit: ticketsPerUnit,
+                                totalTickets: totalTickets,
+                                amount: totalAmount
+                            })
+                        }]
+                    });
+                },
+                onApprove: function(data, actions) {
+                    // Get customer email (already validated in createOrder)
+                    const customerEmail = document.getElementById('customerEmail').value.trim();
+                    
+                    document.getElementById('loading').style.display = 'block';
+                    
+                    return actions.order.capture().then(function(details) {
+                        // Generate ticket numbers
+                        const ticketNumbers = generateTicketNumbers(totalTickets);
+                        
+                        // Create ticket data using customer's email input
+                        const ticketData = {
+                            orderId: data.orderID,
+                            customerEmail: customerEmail, // Use customer's email input
+                            customerName: details.payer.name.given_name + ' ' + details.payer.name.surname,
+                            quantity: quantity,
+                            ticketsPerUnit: ticketsPerUnit,
+                            totalTickets: totalTickets,
+                            amount: totalAmount,
+                            ticketNumbers: ticketNumbers,
+                            purchaseDate: new Date().toISOString()
+                        };
+
+                        // Save to localStorage
+                        const existingTickets = JSON.parse(localStorage.getItem('raffleTickets') || '[]');
+                        existingTickets.push(ticketData);
+                        localStorage.setItem('raffleTickets', JSON.stringify(existingTickets));
+
+                        // SEND EMAIL IMMEDIATELY - SIMPLE METHOD
+                        console.log('🚀 PAYMENT SUCCESS: Sending email immediately...');
+                        sendEmailSimple(ticketData);
+
+                        // Save to Supabase (with retry mechanism)
+                        setTimeout(() => {
+                            saveToSupabase(ticketData);
+                        }, 1000); // Wait 1 second for Supabase to be ready
+
+                        // Wait 3 seconds then redirect (give email time to process)
+                        setTimeout(() => {
+                            const successUrl = `/success.html?tickets=${encodeURIComponent(JSON.stringify(ticketData))}`;
+                            window.location.href = successUrl;
+                        }, 3000);
+                    });
+                },
+                onError: function(err) {
+                    console.error('PayPal error:', err);
+                    document.getElementById('errorMessage').textContent = 'Payment failed. Please try again.';
+                    document.getElementById('errorMessage').style.display = 'block';
+                    document.getElementById('loading').style.display = 'none';
+                }
+            }).render('#paypal-container');
+            
+            // Add visual indication if email is invalid
+            setTimeout(() => {
+                if (!isEmailValid) {
+                    const paypalButton = container.querySelector('[data-funding-source]');
+                    if (paypalButton) {
+                        paypalButton.style.opacity = '0.5';
+                        paypalButton.style.pointerEvents = 'none';
+                        paypalButton.title = 'Please enter a valid email address first';
+                    }
+                }
+            }, 100);
+        }
+
+        async function saveToSupabase(ticketData, retryCount = 0) {
+            try {
+                console.log('💾 SAVING TO SUPABASE:', ticketData, 'retry:', retryCount);
+                
+                // Show user feedback
+                showEmailStatus('💾 Saving Data', 'Saving ticket data to database...', true);
+
+                const insertData = {
+                    stripe_session_id: ticketData.orderId,
+                    payment_intent_id: ticketData.orderId,
+                    customer_email: ticketData.customerEmail,
+                    customer_name: ticketData.customerName,
+                    quantity: ticketData.quantity,
+                    tickets_per_unit: ticketData.ticketsPerUnit,
+                    total_tickets: ticketData.totalTickets,
+                    amount: ticketData.amount,
+                    ticket_numbers: ticketData.ticketNumbers,
+                    status: 'paid',
+                    created_at: ticketData.purchaseDate
+                };
+                
+                console.log('💾 Insert data:', insertData);
+
+                const { data, error } = await supabase
+                    .from('raffle_tickets')
+                    .insert([insertData])
+                    .select();
+
+                if (error) {
+                    console.error('❌ Supabase error:', error);
+                    showEmailStatus('❌ Database Error', 'Failed to save ticket data: ' + error.message, false);
+                    
+                    // Show error in UI
+                    document.getElementById('errorMessage').textContent = 'Database save failed: ' + error.message;
+                    document.getElementById('errorMessage').style.display = 'block';
+                } else {
+                    console.log('✅ Supabase save successful:', data);
+                    showEmailStatus('✅ Data Saved', 'Ticket data saved successfully to database', true);
+                }
+            } catch (error) {
+                console.error('❌ Error saving to Supabase:', error);
+                showEmailStatus('❌ Database Error', 'Failed to save to database: ' + error.message, false);
+            }
+        }
+
+
+
+        // Initialize Supabase and load credentials from server
+        let supabase;
+        let appConfig = {};
+        
+        async function initializeSystem() {
+            try {
+                console.log('🔐 Loading credentials from server...');
+                
+                // First, ensure Supabase client is loaded
+                if (typeof window.supabase === 'undefined') {
+                    console.log('📦 Loading Supabase client...');
+                    await loadSupabaseClient();
+                }
+                
+                // Fetch credentials from server (which loads from .env)
+                const response = await fetch('/api/config');
+                if (!response.ok) {
+                    throw new Error('Failed to load configuration from server');
+                }
+                
+                appConfig = await response.json();
+                console.log('✅ Credentials loaded:', Object.keys(appConfig));
+
+                // Create Supabase client with credentials from server
+                supabase = window.supabase.createClient(
+                    appConfig.SUPABASE_URL,
+                    appConfig.SUPABASE_ANON_KEY
+                );
+
+                // Load PayPal SDK with credentials from server
+                const paypalScript = document.createElement('script');
+                paypalScript.src = `https://www.paypal.com/sdk/js?client-id=${appConfig.PAYPAL_CLIENT_ID}&currency=USD`;
+                paypalScript.onload = function() {
+                    console.log('✅ PayPal SDK loaded successfully');
+                    renderPayPalButtons();
+                };
+                paypalScript.onerror = function() {
+                    console.error('❌ Failed to load PayPal SDK');
+                    document.getElementById('errorMessage').textContent = 'Failed to load payment system. Please refresh the page.';
+                    document.getElementById('errorMessage').style.display = 'block';
+                };
+                document.head.appendChild(paypalScript);
+
+            } catch (error) {
+                console.error('❌ Error loading credentials:', error);
+                document.getElementById('errorMessage').textContent = `Failed to load payment system: ${error.message}`;
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+        }
+        
+        function loadSupabaseClient() {
+            return new Promise((resolve, reject) => {
+                // Check if already loaded
+                if (typeof window.supabase !== 'undefined') {
+                    resolve();
+                    return;
+                }
+                
+                // Load Supabase client from CDN
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/@supabase/supabase-js@2';
+                script.onload = function() {
+                    console.log('✅ Supabase client loaded successfully');
+                    resolve();
+                };
+                script.onerror = function() {
+                    console.error('❌ Failed to load Supabase client');
+                    reject(new Error('Failed to load Supabase client'));
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        // Initialize when page loads
+        initializeSystem();
+
+
+
+
+    </script>
+</body>
+</html> 

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - Thompson's Roofing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #28a745;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .message-box {
+            background: #fff5f0;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 4px solid #ff6b35;
+        }
+
+        .message-box h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .message-box p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .email-note {
+            background: #fff0e6;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #ff8c42;
+        }
+
+        .email-note p {
+            color: #8b4513;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff8c42, #ff6b35);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #dee2e6;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff8c42, #ff6b35);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .footer p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #ff6b35;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">✓</div>
+        <h1>Payment Successful!</h1>
+        <p class="subtitle">Thank you for participating in our raffle!</p>
+
+        <div class="message-box">
+            <h3>Your raffle tickets are on the way!</h3>
+            <p>We've processed your payment and generated your unique raffle ticket numbers.</p>
+            <p>Check your email inbox (and spam folder) for your ticket confirmation.</p>
+        </div>
+
+        <div class="email-note">
+            <p><strong>📧 Email Sent:</strong> Your raffle ticket numbers have been sent to the email address you provided during checkout.</p>
+        </div>
+
+        <div class="buttons">
+            <a href="https://rafflearoof.com" class="btn btn-primary">
+                Visit Our Main Website
+            </a>
+            <a href="/" class="btn btn-secondary">
+                Buy More Tickets
+            </a>
+        </div>
+
+        <div class="footer">
+            <div class="logo">TR</div>
+            <p>Thompson's Roofing</p>
+            <p>Questions? Contact us at <a href="mailto:info@rafflearoof.com">info@rafflearoof.com</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Get ticket data from URL if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const ticketsParam = urlParams.get('tickets');
+        
+        if (ticketsParam) {
+            try {
+                const ticketData = JSON.parse(decodeURIComponent(ticketsParam));
+                displayTicketNumbers(ticketData);
+            } catch (error) {
+                console.error('Error parsing ticket data:', error);
+            }
+        }
+
+        function displayTicketNumbers(ticketData) {
+            const messageBox = document.querySelector('.message-box');
+            const ticketNumbers = ticketData.ticketNumbers;
+            
+            if (ticketNumbers && ticketNumbers.length > 0) {
+                const ticketHtml = ticketNumbers.map(num => 
+                    `<div style="background: #f0f0f0; padding: 10px; margin: 5px 0; border-radius: 5px; text-align: center; font-weight: bold; font-family: monospace;">Ticket #${num}</div>`
+                ).join('');
+                
+                messageBox.innerHTML = `
+                    <h3>Your raffle tickets are ready!</h3>
+                    <p>Thank you for your purchase of $${ticketData.amount}.</p>
+                    <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <h4 style="color: #ff6b35; margin-top: 0;">Your Raffle Ticket Numbers:</h4>
+                        <div style="font-family: monospace; font-size: 18px; line-height: 1.8;">
+                            ${ticketHtml}
+                        </div>
+                    </div>
+                    <p style="color: #666; font-size: 14px;">
+                        <strong>Important:</strong> Please save these ticket numbers. You'll need them to claim your prize if you win!
+                    </p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 
