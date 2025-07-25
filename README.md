@@ -13,6 +13,29 @@ A professional raffle ticket payment system built with Stripe, Supabase, and Ver
 
 ## 🚀 Quick Setup
 
+### 0. GitHub Setup (Recommended)
+
+For automatic deployments and version control:
+
+1. **Create GitHub Repository**:
+   - Go to [GitHub.com](https://github.com) → New repository
+   - Name: `raffle-ticket-system`
+   - Don't initialize with README (we have one)
+
+2. **Push to GitHub**:
+   ```bash
+   git remote add origin https://github.com/YOUR_USERNAME/raffle-ticket-system.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+3. **Connect to Vercel**:
+   - Go to [Vercel.com](https://vercel.com) → New Project
+   - Import your GitHub repository
+   - Set environment variables in Vercel dashboard
+
+📖 **Detailed GitHub setup guide**: See `github-setup.md`
+
 ### 1. Supabase Setup
 
 1. Go to [supabase.com](https://supabase.com) and create a free account
